@@ -1,0 +1,8 @@
+/* src/widgets/map/ui/MapWidget.module.scss */
+
+.mapContainer {
+  width: 100%;
+  height: 100vh; /* Карта на всю высоту экрана */
+  position: relative;
+  z-index: 1; /* Чтобы карта не перекрывала сайдбар, если что-то пойдет не так */
+}
