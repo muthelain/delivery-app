@@ -8,6 +8,7 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url))
 
 export default defineConfig({
   plugins: [react()],
+  base: '/delivery-app/',
   resolve: {
     alias: {
       // Говорим Vite, что '@' означает путь к папке 'src'
