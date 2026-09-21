@@ -1,5 +1,4 @@
 import styles from "./SidebarWidget.module.scss";
-
 import { OrderCard } from "@/components/Card/OrderCard";
 import { UserAvatar } from "@/components/ui/UserAvatar";
 import { ToggleShift } from "@/components/ToggleShift/ToggleShift";
@@ -11,11 +10,13 @@ export const SidebarWidget = ({
   onSelectOrder,
   onAcceptOrder,
   isWorking, 
-  onToggleShift
+  onToggleShift,
+  currentUser
 }) => {
   return (
-    <aside className={`${styles.sidebar} ${!isOpen ? styles.closed : ""}`}>
-      <UserAvatar name="Олексій С." />
+<aside className={`${styles.sidebar} ${!isOpen ? styles.closed : ""}`}>
+      {/* 2. Передаем реальное имя вместо "Олексій С."[cite: 2] */}
+      <UserAvatar name={currentUser?.name || "Завантаження..."} />
 
       <div className={styles.ordersList}>
         {orders.length > 0 ? (
@@ -36,7 +37,7 @@ export const SidebarWidget = ({
 
                 {isSelected && (
                   <button
-                    disabled={!isWorking}
+                    disabled={!isWorking} // <-- Оставляем только проверку открытой смены
                     onClick={(e) => {
                       e.stopPropagation();
                       onAcceptOrder(order);
@@ -52,14 +53,7 @@ export const SidebarWidget = ({
             );
           })
         ) : (
-          <p
-            style={{
-              textAlign: "center",
-              marginTop: "30px",
-              color: "#999",
-              fontSize: "14px",
-            }}
-          >
+          <p className={styles.findOrder}>
             ⏳ Пошук вільних замовлень у Києві...
           </p>
         )}

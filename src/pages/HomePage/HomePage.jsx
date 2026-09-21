@@ -1,9 +1,24 @@
+import { useState, useEffect, useRef } from "react";
+import styles from "./HomePage.module.scss";
+import {
+  MapContainer,
+  TileLayer,
+  Marker,
+  Polyline,
+  Popup,
+  useMap,
+} from "react-leaflet";
+import "leaflet/dist/leaflet.css";
+import { Settings } from "@/components/ui/icons/SettingsIcon";
+import { ChatHelpper } from "@/components/ui/icons/ChatIcon";
+import { SupportChat } from "@/components/ui/SupportChat/SupportChat";
+import { SettingsMenu } from "@/components/ui/SettingsMenu/SettingsMenu";
+import { SidebarWidget } from "@/components/Sidebar/SidebarWidget";
 
-import { useState, useEffect, useRef } from 'react';
-import { MapContainer, TileLayer, Marker, Polyline, Popup, useMap } from 'react-leaflet';
-import 'leaflet/dist/leaflet.css'; 
-
-import { SidebarWidget } from '@/components/Sidebar/SidebarWidget'; 
+import {
+  calculateDeliveryPrice,
+  formatPrice,
+} from "@/services/priceCalculator";
 
 const COURIER_POS = [50.44970451841992, 30.5250656200624];
 
@@ -14,7 +29,10 @@ const ChangeMapCenter = ({ center }) => {
 
   useEffect(() => {
     // Карта перемещается ТОЛЬКО если координаты центра реально изменились по клику
-    if (center && JSON.stringify(prevCenterRef.current) !== JSON.stringify(center)) {
+    if (
+      center &&
+      JSON.stringify(prevCenterRef.current) !== JSON.stringify(center)
+    ) {
       map.setView(center, 15, { animate: true, duration: 0.5 });
       prevCenterRef.current = center;
     }
@@ -23,25 +41,46 @@ const ChangeMapCenter = ({ center }) => {
   return null;
 };
 
-export const MainPage = () => {
-  const [routePath, setRoutePath] = useState([]); 
-  const [isSidebarOpen, setIsSidebarOpen] = useState(true); 
-  const [orders, setOrders] = useState([]); 
-  const [selectedOrder, setSelectedOrder] = useState(null); 
-  const [activeOrder, setActiveOrder] = useState(null); 
+export const MainPage = ({ currentUser, onLogout }) => {
+  const [routePath, setRoutePath] = useState([]);
+  const [isSidebarOpen, setIsSidebarOpen] = useState(true);
+  const [orders, setOrders] = useState([]);
+  const [selectedOrder, setSelectedOrder] = useState(null);
+  const [activeOrder, setActiveOrder] = useState(null);
   const [deliveryStats, setDeliveryStats] = useState(null);
   const [isWorking, setIsWorking] = useState(false);
+  const [isChatOpen, setIsChatOpen] = useState(false);
+  const [isSettingsOpen, setIsSettingsOpen] = useState(false);
+  const [toastMessage, setToastMessage] = useState("");
+
+  const showToast = (message) => {
+    setToastMessage(message);
+    setTimeout(() => setToastMessage(""), 4000);
+  };
 
   const fetchOrders = async () => {
     try {
-      const response = await fetch('http://localhost:3000/api/orders');
+      const token = localStorage.getItem("courierToken");
+      const response = await fetch("http://localhost:3000/api/orders", {
+        headers: {
+          "Authorization": `Bearer ${token}`
+        }
+      });
+
+      // СНАЧАЛА проверяем статус
+      if (response.status === 401 || response.status === 403) {
+        console.warn("Сесія закінчилася. Виконуємо авто-вихід.");
+        onLogout(); 
+        return;
+      }
+      
+      // ТОЛЬКО ПОТОМ парсим данные
       const data = await response.json();
       setOrders(data);
-      
-      // Защита: если выбранный в списке заказ бэкенд удалил по лимиту (прошло много времени)
-      setSelectedOrder(prev => {
+
+      setSelectedOrder((prev) => {
         if (!prev) return null;
-        return data.some(o => o.id === prev.id) ? prev : null;
+        return data.some((o) => o.id === prev.id) ? prev : null;
       });
     } catch (error) {
       console.error("Ошибка загрузки списка заказов:", error);
@@ -60,122 +99,230 @@ export const MainPage = () => {
     setSelectedOrder(order);
   };
 
-  const handleToggleShift = () => {
-    // Если смена открыта и есть заказ - не даем закрыть
+const handleToggleShift = async () => {
+    if (!currentUser?.isVerified) {
+      showToast("⚠️ Ваш акаунт ще перевіряється адміністратором. Ви не можете відкрити зміну.");
+      return;
+    }
+
     if (isWorking && activeOrder) {
       alert("Спочатку завершіть активне замовлення!");
       return;
     }
-    // Меняем статус на противоположный
-    setIsWorking(!isWorking);
+
+    const newWorkingState = !isWorking;
+    
+    try {
+      const token = localStorage.getItem("courierToken");
+      const response = await fetch("http://localhost:3000/api/shift/toggle", {
+        method: "POST",
+        headers: { 
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${token}` 
+        },
+        body: JSON.stringify({ isStarting: newWorkingState })
+      });
+
+      if (response.ok) {
+        setIsWorking(newWorkingState);
+      } else {
+        showToast("❌ Помилка синхронізації зміни з сервером.");
+      }
+    } catch (error) {
+      console.error("Помилка мережі:", error);
+      showToast("❌ Відсутній зв'язок з сервером.");
+    }
   };
 
   // Клик по кнопке «Принять заказ»
   const handleAcceptOrder = async (order) => {
     if (!order) return;
-
+    if (!currentUser?.isVerified) {
+      showToast("⚠️ Акаунт не верифіковано. Прийняття замовлень заблоковано.");
+      return;
+    }
     const courierStr = `${COURIER_POS[1]},${COURIER_POS[0]}`;
     const orderStr = `${order.coordinates[1]},${order.coordinates[0]}`;
     const url = `https://router.project-osrm.org/route/v1/driving/${courierStr};${orderStr}?geometries=geojson`;
-    
+
     try {
       const response = await fetch(url);
       const data = await response.json();
       if (data.routes && data.routes.length > 0) {
-        const route = data.routes[0]; // Берем весь объект маршрута
-        
+        const route = data.routes[0];
+
         const coordinates = route.geometry.coordinates;
-        const formattedPath = coordinates.map(coord => [coord[1], coord[0]]);
-        
-        // ВЫСЧИТЫВАЕМ КИЛОМЕТРЫ И МИНУТЫ
-        // OSRM отдает метры. Делим на 1000 и оставляем 1 знак после запятой (например: 2.5)
-        const distanceKm = (route.distance / 1000).toFixed(1); 
-        // OSRM отдает секунды. Делим на 60 и округляем до целых минут (например: 12)
+        const formattedPath = coordinates.map((coord) => [coord[1], coord[0]]);
+
+        const distanceKm = Number((route.distance / 1000).toFixed(1));
         const durationMin = Math.round(route.duration / 60);
 
-        setRoutePath(formattedPath);     
-        setActiveOrder(order);           
-        setDeliveryStats({ distance: distanceKm, duration: durationMin }); // Сохраняем статистику
-        setIsSidebarOpen(false);         
-        
-        await fetch(`http://localhost:3000/api/orders/${order.id}`, { method: 'DELETE' });
-        fetchOrders(); 
+        // --- НОВАЯ ЛОГИКА ЦЕНЫ ---
+        // Считаем реальную стоимость по нашему сервису
+        const calculatedPrice = calculateDeliveryPrice(distanceKm, durationMin);
+        const formattedPrice = formatPrice(calculatedPrice);
+
+        // Обновляем заказ, заменяя случайную цену с сервера на реальную
+        const updatedOrder = {
+          ...order,
+          price: formattedPrice,
+          rawPrice: calculatedPrice, // Сохраняем просто число, если понадобится для статистики
+        };
+        // -------------------------
+
+        setRoutePath(formattedPath);
+        setActiveOrder(updatedOrder); // Передаем обновленный заказ
+        setDeliveryStats({ distance: distanceKm, duration: durationMin });
+        setIsSidebarOpen(false);
+        fetchOrders();
       }
     } catch (error) {
       console.error("Ошибка построения маршрута:", error);
     }
   };
 
-  // Клик по кнопке «Завершить заказ»
-  const handleCompleteOrder = () => {
-    setActiveOrder(null);       // Сбрасываем текущую доставку
-    setSelectedOrder(null);     // Сбрасываем маркеры
-    setRoutePath([]);           // Удаляем синюю линию маршрута с карты
-    setIsSidebarOpen(true);     // Сайдбар красиво возвращается
-    setDeliveryStats(null);     //  Очищаем километры
+  // НОВЫЙ КОД: Завершення замовлення із відправкою на бекенд
+  const handleCompleteOrder = async () => {
+    if (!activeOrder) return;
+
+    try {
+      const token = localStorage.getItem("courierToken"); // Достаем токен
+      
+      const response = await fetch("http://localhost:3000/api/orders/close", {
+        method: "POST",
+        headers: { 
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${token}` // Передаем токен
+        },
+        body: JSON.stringify({
+          orderId: activeOrder.id,
+          status: "delivered",
+          // courierId убрали, бекенд возьмет его из токена
+        }),
+      });
+
+      if (response.ok) {
+        console.log("✅ Замовлення успішно закрите та збережене в історію!");
+        setActiveOrder(null);
+        setSelectedOrder(null);
+        setRoutePath([]);
+        setIsSidebarOpen(true);
+        setDeliveryStats(null);
+        fetchOrders();
+      } else {
+        console.error("❌ Помилка при закритті замовлення на сервері");
+      }
+    } catch (error) {
+      console.error("❌ Помилка мережі при закритті замовлення:", error);
+    }
   };
 
   return (
-    <div style={{ height: '100vh', width: '100vw', display: 'flex', position: 'relative', overflow: 'hidden' }}>
-      
+    <div className={styles.pageWrapper}>
+      {toastMessage && (
+        <div className={styles.toastNotification}>
+          {toastMessage}
+        </div>
+      )}
       {/* Сайдбар */}
-      <SidebarWidget 
-        isOpen={isSidebarOpen} 
-        orders={orders} 
+      <SidebarWidget
+        isOpen={isSidebarOpen}
+        orders={orders}
         selectedOrder={selectedOrder}
         onSelectOrder={handleSelectOrder}
         onAcceptOrder={handleAcceptOrder}
-        isWorking={isWorking} 
+        isWorking={isWorking}
         onToggleShift={handleToggleShift}
+        currentUser={currentUser}
       />
 
       {/* Интерфейс верхних плавающих кнопок */}
-      <div style={{ position: 'absolute', top: '20px', left: '20px', zIndex: 1500, display: 'flex', flexDirection: 'column', gap: '10px' }}>
-        
-        {/* Кнопка открытия сайдбара (показывается только если мы НЕ в режиме доставки) */}
+      <div className={styles.floatingUi}>
+        {/* Кнопка открытия сайдбара */}
         {!isSidebarOpen && !activeOrder && (
-          <button onClick={() => setIsSidebarOpen(true)} style={{ padding: '12px 20px', background: '#ff6600', color: '#fff', border: 'none', borderRadius: '8px', cursor: 'pointer', fontWeight: 'bold', boxShadow: '0 4px 10px rgba(0,0,0,0.15)' }}>
+          <button
+            onClick={() => setIsSidebarOpen(true)}
+            className={styles.sidebarToggleBtn}
+          >
             ☰ Список замовлень ({orders.length})
           </button>
         )}
 
-        {/* ИСПРАВЛЕНО: Кнопка режима доставки («Завершить заказ») */}
+        {/* Кнопка режима доставки («Завершить заказ») */}
         {activeOrder && (
-          <div style={{ background: '#fff', padding: '15px', borderRadius: '12px', boxShadow: '0 4px 15px rgba(0,0,0,0.2)', display: 'flex', flexDirection: 'column', gap: '10px', width: '280px' }}>
-            <span style={{ fontSize: '12px', color: '#888', fontWeight: 'bold' }}>🚚 ВЫПОЛНЯЕТСЯ ДОСТАВКА:</span>
-            <strong style={{ fontSize: '14px' }}>{activeOrder.address}</strong>
-            {/* НОВЫЙ БЛОК: Показываем километры и время */}
+          <div className={styles.activeOrderPanel}>
+            <span className={styles.activeOrderLabel}>
+              🚚 ВЫПОЛНЯЕТСЯ ДОСТАВКА:
+            </span>
+            <strong className={styles.activeOrderAddress}>
+              {activeOrder.address}
+            </strong>
+
             {deliveryStats && (
-              <div style={{ display: 'flex', justifyContent: 'space-between', background: '#f8f9fa', padding: '10px', borderRadius: '8px', fontSize: '13px', fontWeight: '500' }}>
+              <div className={styles.deliveryStats}>
                 <span>📏 {deliveryStats.distance} км</span>
                 <span>⏱️ ~{deliveryStats.duration} хв</span>
               </div>
             )}
-            <button onClick={handleCompleteOrder} style={{ padding: '12px', background: '#e74c3c', color: '#fff', border: 'none', borderRadius: '6px', cursor: 'pointer', fontWeight: 'bold', fontSize: '14px', transition: 'background 0.2s' }}>
+
+            <button
+              onClick={handleCompleteOrder}
+              className={styles.completeOrderBtn}
+            >
               🏁 Завершити замовлення
             </button>
           </div>
         )}
       </div>
 
-      <MapContainer center={COURIER_POS} zoom={13} style={{ height: '100%', width: '100%', zIndex: 1 }}>
-        <TileLayer attribution='&copy; OpenStreetMap' url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
-        
+      <SupportChat isOpen={isChatOpen} onClose={() => setIsChatOpen(false)} />
+      <SettingsMenu 
+  isOpen={isSettingsOpen} 
+  onClose={() => setIsSettingsOpen(false)} 
+  onLogout={onLogout}
+  currentUser={currentUser} // <-- Передаем функцию выхода
+/>
+
+      <div className={styles.settings}>
+        <div onClick={() => setIsChatOpen(!isChatOpen)}>
+          <ChatHelpper />
+        </div>
+        <div onClick={() => setIsSettingsOpen(!isSettingsOpen)}>
+          <Settings />
+        </div>
+      </div>
+
+      <MapContainer
+        center={COURIER_POS}
+        zoom={13}
+        className={styles.mapContainer}
+      >
+        <TileLayer
+          attribution="&copy; OpenStreetMap"
+          url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+        />
+
         {/* Камера двигается только при клике на карточку */}
-        {selectedOrder && <ChangeMapCenter center={selectedOrder.coordinates} />}
+        {selectedOrder && (
+          <ChangeMapCenter center={selectedOrder.coordinates} />
+        )}
 
         {/* Маркер курьера */}
-        <Marker position={COURIER_POS}><Popup>Кур'єр</Popup></Marker>
+        <Marker position={COURIER_POS}>
+          <Popup>Кур'єр</Popup>
+        </Marker>
 
         {/* Отображаем маркеры. В режиме доставки показываем ТОЛЬКО маркер текущего заказа */}
         {activeOrder ? (
           <Marker position={activeOrder.coordinates}>
-            <Popup><strong>{activeOrder.address}</strong></Popup>
+            <Popup>
+              <strong>{activeOrder.address}</strong>
+            </Popup>
           </Marker>
         ) : (
-          orders.map(order => (
-            <Marker 
-              key={order.id} 
+          orders.map((order) => (
+            <Marker
+              key={order.id}
               position={order.coordinates}
               eventHandlers={{ click: () => handleSelectOrder(order) }}
             >
@@ -188,7 +335,9 @@ export const MainPage = () => {
         )}
 
         {/* Линия пути */}
-        {routePath.length > 0 && <Polyline positions={routePath} color="#2980b9" weight={6} />}
+        {routePath.length > 0 && (
+          <Polyline positions={routePath} color="#2980b9" weight={6} />
+        )}
       </MapContainer>
     </div>
   );

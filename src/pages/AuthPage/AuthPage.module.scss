@@ -1,0 +1,182 @@
+/* Основний контейнер на весь екран */
+.authWrapper {
+  height: 100vh;
+    width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  
+  /* Темний фон, що нагадує нічне місто */
+  background-color: #0f1219;
+  background-image: radial-gradient(circle at top right, #1e2532 0%, #0f1219 60%);
+  color: #e0e0e0;
+}
+
+/* Карточка форми (Стиль SettingsMenu) */
+.authCard {
+  width: 100%;
+  max-width: 420px;
+  padding: 40px;
+  
+  /* Ефект скла */
+  background: rgba(15, 18, 25, 0.7);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 16px;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.7);
+  
+  display: flex;
+  flex-direction: column;
+  gap: 30px;
+}
+
+/* Шапка бренду */
+.brandHeader {
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+
+  .logoCircle {
+    width: 60px;
+    height: 60px;
+    background: #ff6600;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 28px;
+    box-shadow: 0 4px 20px rgba(255, 102, 0, 0.4);
+    margin-bottom: 5px;
+  }
+
+  h2 {
+    margin: 0;
+    font-size: 24px;
+    font-weight: 600;
+    color: #ffffff;
+    letter-spacing: 1px;
+  }
+
+  p {
+    margin: 0;
+    font-size: 14px;
+    color: #8892b0;
+  }
+}
+
+/* Сама форма */
+.authForm {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+/* Група інпутів (Лейбл + поле) */
+.inputGroup {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+
+  label {
+    font-size: 13px;
+    color: #a0aec0;
+    font-weight: 500;
+    padding-left: 4px;
+  }
+
+  input {
+    width: 100%;
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    color: #ffffff;
+    padding: 14px 16px;
+    border-radius: 10px;
+    font-size: 15px;
+    outline: none;
+    transition: all 0.2s ease;
+    box-sizing: border-box;
+
+    &::placeholder {
+      color: rgba(255, 255, 255, 0.2);
+    }
+
+    &:focus {
+      background: rgba(255, 255, 255, 0.08);
+      border-color: #ff6600;
+      box-shadow: 0 0 0 3px rgba(255, 102, 0, 0.15);
+    }
+  }
+}
+
+/* Кнопка відправки */
+.submitBtn {
+  width: 100%;
+  margin-top: 10px;
+  background: #ff6600;
+  color: #fff;
+  border: none;
+  border-radius: 10px;
+  padding: 16px;
+  font-size: 16px;
+  font-weight: 600;
+  cursor: pointer;
+  box-shadow: 0 4px 15px rgba(255, 102, 0, 0.3);
+  transition: all 0.2s;
+
+  &:hover:not(:disabled) {
+    background: #e65c00;
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(255, 102, 0, 0.4);
+  }
+
+  &:disabled {
+    background: #6c757d;
+    cursor: not-allowed;
+    box-shadow: none;
+    opacity: 0.7;
+  }
+}
+
+/* Перемикач Вхід / Реєстрація */
+.toggleMode {
+  text-align: center;
+  margin-top: 5px;
+
+  span {
+    color: #a0aec0;
+    font-size: 14px;
+    cursor: pointer;
+    transition: color 0.2s;
+    font-weight: 500;
+
+    &:hover {
+      color: #ff6600;
+      text-decoration: underline;
+    }
+  }
+}
+
+/* Системні повідомлення */
+.errorMessage {
+  background: rgba(231, 76, 60, 0.15);
+  border-left: 4px solid #e74c3c;
+  color: #ff7675;
+  padding: 12px 16px;
+  border-radius: 6px;
+  font-size: 13px;
+  font-weight: 500;
+}
+
+.successMessage {
+  background: rgba(46, 204, 113, 0.15);
+  border-left: 4px solid #2ecc71;
+  color: #55efc4;
+  padding: 12px 16px;
+  border-radius: 6px;
+  font-size: 13px;
+  font-weight: 500;
+}
