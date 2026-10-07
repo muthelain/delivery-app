@@ -1,10 +1,43 @@
-$bg-main: #f3f4f6;
-$text-main: #111827;
-$text-muted: #6b7280;
+:root {
+  --bg-main: #f3f4f6;
+  --bg-hover: #e5e7eb;
+  --bg-active: #d1d5db;
+  
+  --text-main: #111827;
+  --text-muted: #6b7280;
+  
+  --primary-color: #3b82f6;
+  --success-color: #22c55e;
+  --danger-color: #ef4444;
+  --danger-bg: rgba(239, 68, 68, 0.1);
+  
+  --card-bg: #ffffff;
+  --border-color: #e5e7eb;
+  --border-radius: 12px;
+  
+  --shadow-main: 0 10px 40px rgba(0, 0, 0, 0.08);
+}
 
-$primary-blue: #3b82f6;
-$success-green: #22c55e;
-$danger-red: #ef4444;  
+[data-theme="dark"] {
+  --bg-main: rgba(0, 0, 0, 0.4);
+  --bg-hover: rgba(255, 255, 255, 0.08);
+  --bg-active: rgba(255, 255, 255, 0.15);
+  
+  --text-main: #ffffff;
+  --text-muted: #8892b0;
+  
+  --primary-color: #ff6600; /* Твой фирменный оранжевый из темной темы */
+  --success-color: #22c55e;
+  --danger-color: #e74c3c;
+  --danger-bg: rgba(231, 76, 60, 0.1);
+  
+  --card-bg: rgba(15, 18, 25, 0.85); /* Эффект стекла */
+  --border-color: rgba(255, 255, 255, 0.05);
+  --border-radius: 12px;
+  
+  --shadow-main: 0 20px 60px rgba(0, 0, 0, 0.7);
 
-$card-bg: #ffffff;
-$border-radius: 12px;
+  .leaflet-tile-pane {
+    filter: invert(100%) hue-rotate(180deg) brightness(95%) contrast(90%);
+  }
+}

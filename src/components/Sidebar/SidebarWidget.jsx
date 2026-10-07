@@ -1,6 +1,6 @@
 import styles from "./SidebarWidget.module.scss";
 import { OrderCard } from "@/components/Card/OrderCard";
-import { UserAvatar } from "@/components/ui/UserAvatar";
+import { UserAvatar } from "@/components/ui/UserAvatar/UserAvatar";
 import { ToggleShift } from "@/components/ToggleShift/ToggleShift";
 
 export const SidebarWidget = ({
@@ -16,7 +16,7 @@ export const SidebarWidget = ({
   return (
 <aside className={`${styles.sidebar} ${!isOpen ? styles.closed : ""}`}>
       {/* 2. Передаем реальное имя вместо "Олексій С."[cite: 2] */}
-      <UserAvatar name={currentUser?.name || "Завантаження..."} />
+      <UserAvatar name={currentUser?.name || "Завантаження..."}  avatar={currentUser?.avatar}/>
 
       <div className={styles.ordersList}>
         {orders.length > 0 ? (

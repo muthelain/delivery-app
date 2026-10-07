@@ -41,17 +41,107 @@ const ChangeMapCenter = ({ center }) => {
   return null;
 };
 
-export const MainPage = ({ currentUser, onLogout }) => {
+export const MainPage = ({ currentUser, onLogout, setUser }) => {
   const [routePath, setRoutePath] = useState([]);
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
   const [orders, setOrders] = useState([]);
   const [selectedOrder, setSelectedOrder] = useState(null);
   const [activeOrder, setActiveOrder] = useState(null);
   const [deliveryStats, setDeliveryStats] = useState(null);
-  const [isWorking, setIsWorking] = useState(false);
+  const [isWorking, setIsWorking] = useState(currentUser?.isWorking || false);
   const [isChatOpen, setIsChatOpen] = useState(false);
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const [toastMessage, setToastMessage] = useState("");
+  const [isDarkMode, setIsDarkMode] = useState(
+    localStorage.getItem("theme") !== "light" 
+  );
+
+
+  const chatRef = useRef(null);
+  const settingsRef = useRef(null);
+
+  const toggleChat = () => {
+    setIsChatOpen(!isChatOpen);
+    if (!isChatOpen) setIsSettingsOpen(false); // Закрываем настройки, если открываем чат
+  };
+
+  const toggleSettings = () => {
+    setIsSettingsOpen(!isSettingsOpen);
+    if (!isSettingsOpen) setIsChatOpen(false); // Закрываем чат, если открываем настройки
+  };
+
+
+
+
+  useEffect(() => {
+    if (isDarkMode) {
+      document.body.setAttribute('data-theme', 'dark');
+      localStorage.setItem("theme", "dark");
+    } else {
+      document.body.removeAttribute('data-theme');
+      localStorage.setItem("theme", "light");
+    }
+  }, [isDarkMode]);
+
+
+  const lastActivityRef = useRef(Date.now());
+  const lastOrderTimeRef = useRef(Date.now());
+  useEffect(() => {
+    if (currentUser?.isWorking !== undefined) {
+      setIsWorking(currentUser.isWorking);
+    }
+  }, [currentUser?.isWorking]);
+  useEffect(() => {
+    const updateActivity = () => { lastActivityRef.current = Date.now(); };
+    window.addEventListener('mousemove', updateActivity);
+    window.addEventListener('keydown', updateActivity);
+    window.addEventListener('click', updateActivity);
+    return () => {
+      window.removeEventListener('mousemove', updateActivity);
+      window.removeEventListener('keydown', updateActivity);
+      window.removeEventListener('click', updateActivity);
+    }
+  }, []);
+  
+  useEffect(() => {
+    let interval;
+    if (isWorking) {
+      interval = setInterval(() => {
+        const hasActiveOrder = !!activeOrder;
+        // Користувач вважається активним за комп'ютером (мишка/кліки) останні 5 хв
+        const isRecentlyActive = (Date.now() - lastActivityRef.current) < 5 * 60 * 1000; 
+
+        // 1. ВІДПРАВКА ПУЛЬСУ
+        if (hasActiveOrder || isRecentlyActive) {
+          const token = localStorage.getItem("courierToken");
+          fetch("http://localhost:3000/api/shift/ping", {
+            method: "POST",
+            headers: { "Authorization": `Bearer ${token}` }
+          }).catch(() => console.log("Помилка відправки ping"));
+        }
+
+        // 2. ПЕРЕВІРКА "НА ЛЕДАРЯ" (Рухає мишкою, але не працює)
+        if (!hasActiveOrder) {
+          // Рахуємо, скільки часу пройшло від останнього замовлення/старту зміни
+          const timeWithoutOrders = Date.now() - lastOrderTimeRef.current;
+          
+          // Якщо пройшло 10 хвилин (10 * 60 * 1000) без замовлень
+          if (timeWithoutOrders > 10 * 60 * 1000) {
+            // Викликаємо твою функцію показу плашки
+            showToast("⚠️ Ви давно не приймали замовлення! Почніть працювати або завершіть зміну.");
+            
+            // Відмотуємо таймер трохи назад, щоб плашка з'являлася кожні 3 хвилини, 
+            // поки він не візьме замовлення або не вимкне зміну
+            lastOrderTimeRef.current = Date.now() - (7 * 60 * 1000); 
+          }
+        }
+
+      }, 60000); // Перевірка кожну хвилину
+    }
+    return () => clearInterval(interval);
+  }, [isWorking, activeOrder]);
+
+
 
   const showToast = (message) => {
     setToastMessage(message);
@@ -109,6 +199,9 @@ const handleToggleShift = async () => {
       alert("Спочатку завершіть активне замовлення!");
       return;
     }
+    if (!isWorking) {
+      lastOrderTimeRef.current = Date.now();
+    }
 
     const newWorkingState = !isWorking;
     
@@ -123,14 +216,13 @@ const handleToggleShift = async () => {
         body: JSON.stringify({ isStarting: newWorkingState })
       });
 
-      if (response.ok) {
+if (response.ok) {
         setIsWorking(newWorkingState);
-      } else {
-        showToast("❌ Помилка синхронізації зміни з сервером.");
+        // Також оновлюємо глобальний стейт, щоб інші компоненти знали
+        if (setUser) setUser(prev => ({ ...prev, isWorking: newWorkingState }));
       }
     } catch (error) {
       console.error("Помилка мережі:", error);
-      showToast("❌ Відсутній зв'язок з сервером.");
     }
   };
 
@@ -179,6 +271,7 @@ const handleToggleShift = async () => {
     } catch (error) {
       console.error("Ошибка построения маршрута:", error);
     }
+    lastOrderTimeRef.current = Date.now();
   };
 
   // НОВЫЙ КОД: Завершення замовлення із відправкою на бекенд
@@ -215,7 +308,41 @@ const handleToggleShift = async () => {
     } catch (error) {
       console.error("❌ Помилка мережі при закритті замовлення:", error);
     }
+    lastOrderTimeRef.current = Date.now();
   };
+
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      // Игнорируем клик, если он был по самим иконкам (чтобы toggle-функции сработали корректно)
+      if (event.target.closest(`.${styles.settings}`)) return;
+
+      let clickedInsideWidget = false;
+
+      // Проверяем, был ли клик внутри чата
+      if (chatRef.current && chatRef.current.contains(event.target)) {
+        clickedInsideWidget = true;
+      }
+      // Проверяем, был ли клик внутри настроек
+      if (settingsRef.current && settingsRef.current.contains(event.target)) {
+        clickedInsideWidget = true;
+      }
+
+      // Если клик был не внутри виджета — закрываем оба
+      if (!clickedInsideWidget) {
+        setIsChatOpen(false);
+        setIsSettingsOpen(false);
+      }
+    };
+
+    // Вешаем слушатель на нажатие мыши
+    document.addEventListener("mousedown", handleClickOutside);
+    
+    // Очищаем слушатель при размонтировании компонента
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, []);
+    
 
   return (
     <div className={styles.pageWrapper}>
@@ -275,19 +402,25 @@ const handleToggleShift = async () => {
         )}
       </div>
 
-      <SupportChat isOpen={isChatOpen} onClose={() => setIsChatOpen(false)} />
-      <SettingsMenu 
-  isOpen={isSettingsOpen} 
-  onClose={() => setIsSettingsOpen(false)} 
-  onLogout={onLogout}
-  currentUser={currentUser} // <-- Передаем функцию выхода
-/>
-
-      <div className={styles.settings}>
-        <div onClick={() => setIsChatOpen(!isChatOpen)}>
+      <div ref={chatRef}>
+        <SupportChat isOpen={isChatOpen} onClose={() => setIsChatOpen(false)} />
+      </div>
+<div ref={settingsRef}>
+        <SettingsMenu 
+          isOpen={isSettingsOpen} 
+          onClose={() => setIsSettingsOpen(false)} 
+          onLogout={onLogout}
+          currentUser={currentUser} 
+          setUser={setUser}
+          isDarkMode={isDarkMode}
+          setIsDarkMode={setIsDarkMode}
+        />
+      </div>
+<div className={styles.settings}>
+        <div onClick={toggleChat}>
           <ChatHelpper />
         </div>
-        <div onClick={() => setIsSettingsOpen(!isSettingsOpen)}>
+        <div onClick={toggleSettings}>
           <Settings />
         </div>
       </div>
@@ -335,8 +468,8 @@ const handleToggleShift = async () => {
         )}
 
         {/* Линия пути */}
-        {routePath.length > 0 && (
-          <Polyline positions={routePath} color="#2980b9" weight={6} />
+          {routePath.length > 0 && (
+          <Polyline positions={routePath} color="#ff6600" weight={6} />
         )}
       </MapContainer>
     </div>

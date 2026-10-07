@@ -9,8 +9,8 @@
 
 body {
   font-family: "Inter", sans-serif;
-  background-color: $bg-main;
-  color: $text-main;
+background-color: var(--bg-main);
+  color: var(text-main);
   -webkit-font-smoothing: antialiased;
   margin: 0;
   padding: 0;

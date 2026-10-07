@@ -1,4 +1,4 @@
-/* --- ГЛАВНОЕ ОКНО В СТИЛЕ SAMSUNG TV --- */
+/* --- ГЛАВНОЕ ОКНО --- */
 .settingsWindow {
   position: fixed;
   top: 50%;
@@ -6,21 +6,21 @@
   width: 75vw;
   height: 70vh;
 
-  /* Темный фон с эффектом стекла (blur) */
-  background: rgba(15, 18, 25, 0.85);
+  /* Фон та ефект скла */
+  background: var(--card-bg);
   backdrop-filter: blur(20px);
   -webkit-backdrop-filter: blur(20px);
 
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  border-radius: 12px;
-  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.7);
-
-  display: flex; /* Flex-row для разделения на левое и правое меню */
+  border: 1px solid var(--border-color);
+  border-radius: var(--border-radius, 12px);
+  box-shadow: var(--shadow-main);
+  
+  display: flex;
   flex-direction: row;
   overflow: hidden;
   z-index: 9999;
 
-  color: #e0e0e0; /* Светло-серый текст по умолчанию */
+  color: var(--text-main);
 
   transform: translate(-50%, -40%) scale(0.95);
   opacity: 0;
@@ -37,11 +37,11 @@
 /* --- ЛЕВАЯ ПАНЕЛЬ (Сайдбар) --- */
 .sidebar {
   width: 280px;
-  background: rgba(0, 0, 0, 0.4); /* Чуть темнее основного фона */
+  background: var(--bg-main); 
   display: flex;
   flex-direction: column;
   padding: 30px 0;
-  border-right: 1px solid rgba(255, 255, 255, 0.05);
+  border-right: 1px solid var(--border-color);
 }
 
 .tvBrand {
@@ -49,7 +49,7 @@
   font-size: 14px;
   text-transform: uppercase;
   letter-spacing: 2px;
-  color: #8892b0;
+  color: var(--text-muted);
   font-weight: 600;
 }
 
@@ -63,7 +63,7 @@
 .navItem {
   background: transparent;
   border: none;
-  color: #a0aec0;
+  color: var(--text-muted);
   font-size: 16px;
   font-weight: 500;
   text-align: left;
@@ -76,15 +76,13 @@
   gap: 12px;
 
   &:hover {
-    background: rgba(255, 255, 255, 0.05);
-    color: #fff;
+    background: var(--bg-hover);
+    color: var(--text-main);
   }
 
-  /* Активный пункт меню в стиле фокуса ТВ пульта */
   &.active {
-    background: #ff6600; /* Яркий синий цвет Samsung */
+    background: var(--primary-color);
     color: #ffffff;
-    box-shadow: 0 4px 15px rgba(255, 98, 0, 0.4);
     font-weight: 600;
   }
 }
@@ -93,9 +91,9 @@
   margin-top: auto;
   margin-left: 15px;
   margin-right: 15px;
-  background: rgba(255, 255, 255, 0.1);
+  background: var(--bg-hover);
   border: none;
-  color: #fff;
+  color: var(--text-main);
   padding: 12px;
   border-radius: 8px;
   cursor: pointer;
@@ -107,7 +105,10 @@
   transition: background 0.2s;
 
   &:hover {
-    background: #e74c3c; /* Красный при наведении на выход */
+    background: var(--danger-color);
+    color: #ffffff;
+    /* Якщо іконка чорна, інвертуємо її в білу при наведенні */
+    img { filter: brightness(0) invert(1); } 
   }
 }
 
@@ -118,6 +119,24 @@
   flex-direction: column;
   padding: 40px 50px;
   overflow-y: auto;
+
+  /* --- КАСТОМНЫЙ СКРОЛЛ --- */
+  scrollbar-width: thin;
+  scrollbar-color: var(--text-muted) transparent;
+
+  &::-webkit-scrollbar {
+    width: 6px;
+  }
+  &::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  &::-webkit-scrollbar-thumb {
+    background-color: var(--text-muted);
+    border-radius: 10px;
+  }
+  &::-webkit-scrollbar-thumb:hover {
+    background-color: var(--text-main);
+  }
 }
 
 .contentHeader {
@@ -126,8 +145,8 @@
   h2 {
     margin: 0;
     font-size: 28px;
-    font-weight: 400;
-    color: #ffffff;
+    font-weight: 600;
+    color: var(--text-main);
     letter-spacing: 0.5px;
   }
 }
@@ -143,16 +162,15 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
-  background: rgba(255, 255, 255, 0.03);
+  background: var(--bg-main);
   padding: 20px 25px;
-  border-radius: 12px;
-  border: 1px solid transparent;
+  border-radius: var(--border-radius, 12px);
+  border: 1px solid var(--border-color);
   transition: all 0.2s;
 
-  /* Эффект наведения пульта */
   &:hover {
-    background: rgba(255, 255, 255, 0.08);
-    border: 1px solid rgba(255, 255, 255, 0.15);
+    background: var(--bg-hover);
+    border-color: var(--bg-active);
   }
 }
 
@@ -165,24 +183,25 @@
 .settingTitle {
   font-size: 18px;
   font-weight: 500;
-  color: #ffffff;
+  color: var(--text-main);
 }
 
 .settingDesc {
   font-size: 14px;
-  color: #8892b0;
+  color: var(--text-muted);
 }
 
 .supportInfo {
-  color: #8892b0;
+  color: var(--text-muted);
   font-size: 15px;
   line-height: 1.6;
-  background: rgba(0, 0, 0, 0.3);
+  background: var(--bg-main);
   padding: 20px;
-  border-radius: 12px;
+  border-radius: var(--border-radius, 12px);
+  border: 1px solid var(--border-color);
 
   strong {
-    color: #fff;
+    color: var(--text-main);
   }
 }
 
@@ -199,8 +218,7 @@
     height: 0;
 
     &:checked + .slider {
-      background-color: #ff6600; /* Синий Samsung */
-      box-shadow: 0 0 10px rgba(0, 114, 255, 0.5);
+      background-color: var(--primary-color);
     }
 
     &:checked + .slider:before {
@@ -217,7 +235,7 @@
   left: 0;
   right: 0;
   bottom: 0;
-  background-color: rgba(255, 255, 255, 0.2);
+  background-color: var(--text-muted);
   transition: 0.3s;
   border-radius: 30px;
 
@@ -228,13 +246,13 @@
     width: 22px;
     left: 4px;
     bottom: 4px;
-    background-color: #a0aec0;
+    background-color: #ffffff;
     transition: 0.3s;
     border-radius: 50%;
   }
 }
 
-/* --- ВКЛАДКА АКАУНТ (Нові стилі) --- */
+/* --- ВКЛАДКА АКАУНТ --- */
 .accountTab {
   display: flex;
   flex-direction: column;
@@ -246,24 +264,23 @@
   display: flex;
   align-items: center;
   gap: 20px;
-  background: rgba(255, 255, 255, 0.03);
+  background: var(--bg-main);
   padding: 20px;
-  border-radius: 12px;
-  border: 1px solid rgba(255, 255, 255, 0.05);
+  border-radius: var(--border-radius, 12px);
+  border: 1px solid var(--border-color);
 }
 
 .avatarCircle {
   width: 80px;
   height: 80px;
   border-radius: 50%;
-  background: #ff6600; /* Фірмовий колір */
+  background: var(--primary-color); 
   display: flex;
   align-items: center;
   justify-content: center;
   font-size: 28px;
   font-weight: bold;
-  color: #fff;
-  box-shadow: 0 4px 15px rgba(255, 102, 0, 0.3);
+  color: #ffffff;
 }
 
 .avatarInfo {
@@ -273,27 +290,27 @@
 
   h3 {
     margin: 0;
-    color: #fff;
+    color: var(--text-main);
     font-size: 22px;
-    font-weight: 500;
+    font-weight: 600;
   }
 
   p {
     margin: 0;
-    color: #8892b0;
+    color: var(--text-muted);
     font-size: 14px;
     margin-bottom: 8px;
     
     strong {
-      color: #ff6600;
+      color: var(--primary-color);
     }
   }
 }
 
 .changeAvatarBtn {
-  background: rgba(255, 255, 255, 0.1);
+  background: var(--bg-hover);
   border: none;
-  color: #fff;
+  color: var(--text-main);
   padding: 8px 16px;
   border-radius: 6px;
   cursor: pointer;
@@ -303,14 +320,14 @@
   width: fit-content;
 
   &:hover {
-    background: rgba(255, 255, 255, 0.2);
+    background: var(--bg-active);
   }
 }
 
 /* Блок Статистики */
 .statsTitle {
   margin: 10px 0 0 0;
-  color: #a0aec0;
+  color: var(--text-muted);
   font-size: 16px;
   font-weight: 500;
   text-transform: uppercase;
@@ -324,9 +341,9 @@
 }
 
 .statCard {
-  background: rgba(0, 0, 0, 0.3);
-  border: 1px solid rgba(255, 255, 255, 0.05);
-  border-radius: 12px;
+  background: var(--bg-main);
+  border: 1px solid var(--border-color);
+  border-radius: var(--border-radius, 12px);
   padding: 20px;
   display: flex;
   flex-direction: column;
@@ -334,20 +351,20 @@
   transition: all 0.2s;
 
   &:hover {
-    background: rgba(0, 0, 0, 0.5);
-    border-color: rgba(255, 255, 255, 0.1);
+    background: var(--bg-hover);
+    border-color: var(--bg-active);
     transform: translateY(-2px);
   }
 }
 
 .statValue {
-  color: #fff;
+  color: var(--text-main);
   font-size: 24px;
   font-weight: 600;
 }
 
 .statLabel {
-  color: #8892b0;
+  color: var(--text-muted);
   font-size: 13px;
 }
 
@@ -355,18 +372,17 @@
   margin-top: 20px;
   width: 100%;
   padding: 14px;
-  background: rgba(231, 76, 60, 0.1);
-  color: #e74c3c;
-  border: 1px solid rgba(231, 76, 60, 0.3);
-  border-radius: 10px;
+  background: var(--danger-bg);
+  color: var(--danger-color);
+  border: 1px solid var(--danger-color);
+  border-radius: var(--border-radius, 10px);
   font-size: 15px;
   font-weight: 600;
   cursor: pointer;
   transition: all 0.2s;
 
   &:hover {
-    background: #e74c3c;
-    color: #fff;
-    box-shadow: 0 4px 15px rgba(231, 76, 60, 0.4);
+    background: var(--danger-color);
+    color: #ffffff;
   }
 }

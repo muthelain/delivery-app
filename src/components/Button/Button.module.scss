@@ -3,19 +3,19 @@
 .button {
   width: 100%;
   padding: 12px 24px;
-  border-radius: 12px;
+  border-radius: var(--border-radius, 12px);
   font-size: 16px;
   font-weight: 600;
   border: none;
   cursor: pointer;
   transition: all 0.2s ease;
   
-  /* Базовый стиль (синяя кнопка) */
-  background-color: #3b82f6; /* Можно заменить на переменную из global, если настроишь экспорт */
-  color: white;
+  /* Базовый стиль (динамический цвет в зависимости от темы) */
+  background-color: var(--primary-color);
+  color: #ffffff; /* Текст на залитой кнопке остается белым в обеих темах */
 
   &:hover {
-    background-color: #2563eb;
+    filter: brightness(0.9); /* Универсальное затемнение */
     transform: translateY(-2px);
   }
 
@@ -23,12 +23,12 @@
     transform: translateY(0);
   }
 
-  /* Модификатор для красной кнопки (Завершить смену) */
+  /* Модификатор для красной кнопки (Завершить смену / Отменить) */
   &.danger {
-    background-color: #ef4444;
+    background-color: var(--danger-color);
 
     &:hover {
-      background-color: #dc2828;
+      filter: brightness(0.9);
     }
   }
 }

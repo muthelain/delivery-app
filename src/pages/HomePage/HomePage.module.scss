@@ -25,26 +25,28 @@
 // Кнопка открытия сайдбара
 .sidebarToggleBtn {
   padding: 12px 20px;
-  background: #ff6600;
-  color: #fff;
+  background: var(--primary-color);
+  color: #ffffff;
   border: none;
   border-radius: 8px;
   cursor: pointer;
   font-weight: bold;
-  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.15);
-  transition: background 0.2s ease;
+  box-shadow: var(--shadow-main);
+  transition: all 0.2s ease;
 
   &:hover {
-    background: #e65c00;
+    filter: brightness(0.9);
+    transform: translateY(-2px);
   }
 }
 
 // Панель активного заказа в режиме доставки
 .activeOrderPanel {
-  background: #fff;
+  background: var(--card-bg);
   padding: 15px;
-  border-radius: 12px;
-  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+  border-radius: var(--border-radius, 12px);
+  box-shadow: var(--shadow-main);
+  border: 1px solid var(--border-color); /* Чіткі межі для темної теми */
   display: flex;
   flex-direction: column;
   gap: 10px;
@@ -53,19 +55,22 @@
 
 .activeOrderLabel {
   font-size: 12px;
-  color: #888;
+  color: var(--text-muted);
   font-weight: bold;
 }
 
 .activeOrderAddress {
   font-size: 14px;
+  color: var(--text-main); /* Явний колір тексту для зміни тем */
 }
 
 // Блок со статистикой (км и минуты)
 .deliveryStats {
   display: flex;
   justify-content: space-between;
-  background: #f8f9fa;
+  background: var(--bg-main);
+  color: var(--text-main);
+  border: 1px solid var(--border-color);
   padding: 10px;
   border-radius: 8px;
   font-size: 13px;
@@ -75,17 +80,17 @@
 // Кнопка завершения заказа
 .completeOrderBtn {
   padding: 12px;
-  background: #e74c3c;
-  color: #fff;
+  background: var(--danger-color);
+  color: #ffffff;
   border: none;
   border-radius: 6px;
   cursor: pointer;
   font-weight: bold;
   font-size: 14px;
-  transition: background 0.2s;
+  transition: filter 0.2s;
 
   &:hover {
-    background: #c0392b;
+    filter: brightness(0.9);
   }
 }
 
@@ -128,13 +133,13 @@
   top: 20px;
   left: 50%;
   transform: translateX(-50%);
-  background: rgba(231, 76, 60, 0.95);
-  color: #fff;
+  background: var(--danger-color);
+  color: #ffffff;
   padding: 15px 25px;
-  border-radius: 8px;
+  border-radius: var(--border-radius, 8px);
   font-weight: 500;
   font-size: 15px;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+  box-shadow: var(--shadow-main);
   z-index: 3000; /* Выше карты и сайдбара */
   
   /* Анимация появления сверху */

@@ -1,12 +1,14 @@
+
 .card {
-  background-color: #ffffff;
-  border-radius: 12px;
+  background-color: var(--card-bg);
+  border-radius: var(--border-radius, 12px);
   padding: 16px;
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+  /* Використовуємо глобальну тінь, щоб у темній темі вона була виразнішою, а в світлій — м'якою */
+  box-shadow: var(--shadow-main);
   display: flex;
   flex-direction: column;
   gap: 8px;
-  border: 1px solid #e5e7eb;
+  border: 1px solid var(--border-color);
   width: 100%;
   max-width: 350px;
 }
@@ -14,17 +16,17 @@
 .address {
   font-size: 16px;
   font-weight: 600;
-  color: #111827;
+  color: var(--text-main);
 }
 
 .details {
   display: flex;
   justify-content: space-between;
   font-size: 14px;
-  color: #6b7280;
+  color: var(--text-muted);
 }
 
 .price {
   font-weight: 600;
-  color: #22c55e; /* Зеленый из твоего дизайна */
+  color: var(--success-color);
 }
