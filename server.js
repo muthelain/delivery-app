@@ -131,10 +131,22 @@ app.post('/api/orders/close', authenticateToken, async (req, res) => {
     const targetId = parseFloat(orderId);
     const orderIndex = activeOrders.findIndex(order => order.id === targetId);
 
-    if (orderIndex === -1) return res.status(404).json({ error: 'Заказ не найден' });
+    let closedOrder;
 
-    const [closedOrder] = activeOrders.splice(orderIndex, 1);
+    if (orderIndex === -1) {
+      // Заказ исчез из массива (перезапуск сервера или лимит в 20 заказов),
+      // создаем объект-заглушку, чтобы курьер все равно получил статистику за работу.
+      closedOrder = {
+        id: targetId,
+        address: "Адреса з архіву",
+        price: "Оплачено",
+      };
+    } else {
+      // Заказ найден, вырезаем его из активных
+      [closedOrder] = activeOrders.splice(orderIndex, 1);
+    }
 
+    // Сохраняем в историю в любом случае
     await historyCollection.insertOne({
       orderId: closedOrder.id,
       address: closedOrder.address,
@@ -144,6 +156,7 @@ app.post('/api/orders/close', authenticateToken, async (req, res) => {
       closedAt: new Date(),
     });
 
+    // Добавляем заказ в статистику курьера
     await couriersCollection.updateOne(
       { _id: new ObjectId(req.user.id) },
       { $inc: { "stats.totalOrders": 1 } }
@@ -152,6 +165,7 @@ app.post('/api/orders/close', authenticateToken, async (req, res) => {
     console.log(`✅ Замовлення ${orderId} збережено. Статистику оновлено.`);
     res.json({ success: true });
   } catch (error) {
+    console.error(error);
     res.status(500).json({ error: 'Помилка БД' });
   }
 });
