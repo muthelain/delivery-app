@@ -59,7 +59,7 @@ function getDistance(lat1, lon1, lat2, lon2) {
 
 async function connectDB() {
   await client.connect();
-  const db = client.db("Ukaraine");
+  const db = client.db("Ukraine");
   housesCollection = db.collection("building");
   historyCollection = db.collection("orders_history");
   couriersCollection = db.collection("couriers");
