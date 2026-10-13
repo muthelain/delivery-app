@@ -62,7 +62,7 @@ export const AuthPage = ({ onLogin }) => {
               <label>Ім'я та прізвище</label>
               <input
                 type="text"
-                placeholder="Кирило Гаращенко"
+                placeholder="Василь Васильович"
                 required
                 value={formData.name}
                 onChange={(e) => setFormData({ ...formData, name: e.target.value })}
