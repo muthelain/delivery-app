@@ -34,7 +34,7 @@ const storage = multer.diskStorage({
 const upload = multer({ storage });
 // ====================================
 
-const url = "mongodb://localhost:27017";
+const url = process.env.MONGO_URI;
 const client = new MongoClient(url);
 
 let housesCollection;
