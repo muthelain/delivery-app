@@ -14,7 +14,7 @@ export const AuthPage = ({ onLogin }) => {
     setMessage("");
     setIsLoading(true);
 
-    const url = isLogin ? "http://localhost:3000/api/auth/login" : "http://localhost:3000/api/auth/register";
+    const url = isLogin ? "https://delivery-app-v33t.onrender.com/api/auth/login" : "https://delivery-app-v33t.onrender.com/api/auth/register";
 
     try {
       const response = await fetch(url, {

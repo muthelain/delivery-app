@@ -114,7 +114,7 @@ export const MainPage = ({ currentUser, onLogout, setUser }) => {
         // 1. ВІДПРАВКА ПУЛЬСУ
         if (hasActiveOrder || isRecentlyActive) {
           const token = localStorage.getItem("courierToken");
-          fetch("http://localhost:3000/api/shift/ping", {
+          fetch("https://delivery-app-v33t.onrender.com/api/shift/ping", {
             method: "POST",
             headers: { "Authorization": `Bearer ${token}` }
           }).catch(() => console.log("Помилка відправки ping"));
@@ -151,7 +151,7 @@ export const MainPage = ({ currentUser, onLogout, setUser }) => {
   const fetchOrders = async () => {
     try {
       const token = localStorage.getItem("courierToken");
-      const response = await fetch("http://localhost:3000/api/orders", {
+      const response = await fetch("https://delivery-app-v33t.onrender.com/api/orders", {
         headers: {
           "Authorization": `Bearer ${token}`
         }
@@ -207,7 +207,7 @@ const handleToggleShift = async () => {
     
     try {
       const token = localStorage.getItem("courierToken");
-      const response = await fetch("http://localhost:3000/api/shift/toggle", {
+      const response = await fetch("https://delivery-app-v33t.onrender.com/api/shift/toggle", {
         method: "POST",
         headers: { 
           "Content-Type": "application/json",
@@ -281,7 +281,7 @@ if (response.ok) {
     try {
       const token = localStorage.getItem("courierToken"); // Достаем токен
       
-      const response = await fetch("http://localhost:3000/api/orders/close", {
+      const response = await fetch("https://delivery-app-v33t.onrender.com/api/orders/close", {
         method: "POST",
         headers: { 
           "Content-Type": "application/json",

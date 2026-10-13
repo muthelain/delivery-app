@@ -35,7 +35,7 @@ export const SettingsMenu = ({ isOpen, onClose, onLogout, currentUser, setUser, 
     setIsLoadingStats(true);
     try {
       const token = localStorage.getItem("courierToken");
-      const response = await fetch("http://localhost:3000/api/profile", {
+      const response = await fetch("https://delivery-app-v33t.onrender.com/api/profile", {
         headers: { "Authorization": `Bearer ${token}` }
       });
       if (response.ok) {
@@ -62,7 +62,7 @@ export const SettingsMenu = ({ isOpen, onClose, onLogout, currentUser, setUser, 
 
     try {
       const token = localStorage.getItem("courierToken");
-      const response = await fetch("http://localhost:3000/api/profile/avatar", {
+      const response = await fetch("https://delivery-app-v33t.onrender.com/api/profile/avatar", {
         method: "POST",
         headers: { "Authorization": `Bearer ${token}` }, // Content-Type браузер поставить сам!
         body: formData
